@@ -1,24 +1,15 @@
-# 大师姐 VibeCoding 小站
+# 大师姐博客 MVP
 
-文件说明：
-- index.html：大师姐主页
-- tool.html：接龙物品分配器匿名演示版
-- prompt.txt：完整提示词
+推荐上传到 `MonkeeYe/monkeeye.github.io` 仓库的 `dashijie/` 目录。
 
-## 推荐部署方式（GitHub Pages）
+结构：
+- index.html：博客首页
+- posts/distributor/index.html：第一篇文章网页
+- posts/distributor/article.md：文章 Markdown 源稿
+- assets/css/style.css：统一样式
+- assets/images/：压缩图片
+- tools/distributor.html：匿名版工具
 
-如果你的个人站点仓库是：
-MonkeeYe/monkeeye.github.io
-
-建议在仓库中新建目录：
-dashijie/
-
-然后把本文件夹里的 3 个文件上传到 dashijie/ 目录。
-
-最终地址将类似：
-https://monkeeye.github.io/dashijie/
-
-工具地址：
-https://monkeeye.github.io/dashijie/tool.html
-
-后续如果你想把文章链接加入主页，只需要在 index.html 的项目卡片里增加“阅读全文”按钮即可。
+访问：
+- https://monkeeye.github.io/dashijie/
+- https://monkeeye.github.io/dashijie/posts/distributor/

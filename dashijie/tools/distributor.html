@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>接龙分发小助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f6f4; --card:#fff; --line:#e6e6e3; --line-soft:#f0f0ed;
+  --ink:#18181b; --ink-2:#55555e; --ink-3:#8e8e97;
+  --accent:#f59e0b; --accent-deep:#b45309; --accent-soft:#fef3c7;
+  --ok:#2f6f5e; --warn:#b06367;
+  --shadow:0 2px 10px rgba(0,0,0,.045);
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"Outfit","Noto Sans SC",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font-family:inherit;font-size:15px;font-weight:500;border-radius:11px;padding:10px 16px;
+  cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-2);
+  transition:transform .16s,box-shadow .16s,border-color .16s,background .16s;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;-webkit-tap-highlight-color:transparent}
+button:active{transform:scale(.985)}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:"JetBrains Mono",monospace}
+
+.app{max-width:480px;margin:0 auto;padding:22px 16px 60px;display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;flex-direction:column;gap:5px}
+header.top h1{font-size:27px;line-height:1.25}
+header.top .sub{font-size:13px;color:var(--ink-3);line-height:1.55}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.hidden{display:none!important}
+.label{font-size:13.5px;font-weight:600;display:block;margin-bottom:8px}
+.label span{font-weight:400;color:var(--ink-3);font-size:12px;margin-left:6px}
+.label-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.label-row .label{margin:0;flex:1}
+.label-row button{font-size:13px;padding:7px 10px;border-radius:9px;white-space:nowrap}
+
+textarea{
+  width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;
+  font-family:"JetBrains Mono","Noto Sans SC",monospace;font-size:13px;line-height:1.75;
+  color:var(--ink);background:#fcfcfb;resize:vertical;outline:none;min-height:190px;
+  transition:border-color .16s,box-shadow .16s;
+}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.13);background:#fff}
+textarea[readonly]{background:#f7f7f5;color:var(--ink-2);cursor:default;resize:none}
+textarea[readonly]:focus{border-color:var(--line);box-shadow:none;background:#f7f7f5}
+textarea::placeholder{color:#b0b0b8;opacity:1}
+.hint{font-size:12px;color:var(--ink-3);margin:7px 0 0;line-height:1.55}
+
+.act-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#3a2800;font-weight:600}
+button.primary:active{background:#e8930c}
+button.block{width:100%}
+button.ghost{background:transparent}
+button.icon{width:36px;height:36px;padding:0;border-radius:10px}
+button.danger{color:#9b3b40;border-color:#eccfd0;background:#fdf6f6}
+button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-deep);font-weight:600}
+
+.list-btn{width:100%;justify-content:space-between;padding:13px 15px;font-weight:500;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink)}
+.list-btn .cnt{font-size:12px;color:var(--ink-3);font-family:"JetBrains Mono",monospace}
+.status{font-size:12.5px;color:var(--ink-3);margin:10px 0 0;display:flex;flex-wrap:wrap;gap:4px 10px}
+.status b{color:var(--ink-2);font-weight:600}
+
+/* 办公室卡片 */
+.ocard{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.ocard .oh{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#fafaf8;border-bottom:1px solid var(--line-soft)}
+.ocard .oh .no{font-family:"JetBrains Mono",monospace;font-weight:600;font-size:14.5px}
+.ocard .oh .ct{margin-left:auto;font-size:11.5px;color:var(--ink-3)}
+.ocard .oh .warn{font-size:11px;color:var(--warn);background:#fdf3f3;border:1px solid #f0dcdc;border-radius:999px;padding:1px 7px}
+.ocard table{width:100%;border-collapse:collapse;font-size:14px}
+.ocard td{padding:8px 13px;border-bottom:1px solid #f5f5f3}
+.ocard tr:last-child td{border-bottom:none}
+.ocard td.nm{font-weight:500}
+.ocard td.item{color:var(--ink-2);text-align:right;white-space:nowrap}
+.ocard td.item i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:7px;vertical-align:middle}
+.ocard td.nm i{width:22px;display:inline-block}
+
+/* 需物品清单 */
+.needlist{display:flex;flex-direction:column}
+.needrow{display:flex;align-items:center;gap:11px;padding:12px 2px;border-bottom:1px solid var(--line-soft)}
+.needrow:last-child{border-bottom:none}
+.needrow .dot{width:11px;height:11px;border-radius:3px;flex:none}
+.needrow .nm{font-size:15px}
+.needrow .spec{font-size:12px;color:var(--ink-3);margin-left:6px}
+.needrow .qty{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:19px;font-weight:600;letter-spacing:-.02em}
+.needrow .qty em{font-style:normal;font-size:12px;color:var(--ink-3);font-weight:400;margin-left:3px}
+
+/* 提示 */
+.issue{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:11px;font-size:13.5px;background:#fdf6f6;border:1px solid #f2e2e2;color:#6b3a3d;margin-bottom:8px;line-height:1.55}
+.issue:last-child{margin-bottom:0}
+.issue.ok{background:#f1f8f4;border-color:#dcece4;color:#275a4b}
+.issue svg{flex:none;margin-top:2px}
+.sec-h{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.sec-h h2{font-size:16.5px}
+.sec-h .meta{margin-left:auto;font-size:12px;color:var(--ink-3)}
+
+/* ══ 弹窗 ══ */
+.backdrop{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s}
+.backdrop.on{opacity:1;pointer-events:auto}
+.sheet{background:var(--bg);width:100%;max-width:480px;height:92vh;display:flex;flex-direction:column;
+  border-radius:18px 18px 0 0;transform:translateY(18px);transition:transform .25s cubic-bezier(.22,1,.36,1);overflow:hidden}
+.backdrop.on .sheet{transform:none}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.sheet-h h2{font-size:17px}
+.sheet-h .sp{margin-left:auto;display:flex;gap:8px;align-items:center}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 8px}
+.sheet-foot{border-top:1px solid var(--line);background:#fff;padding:11px 12px calc(11px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center}
+.sheet-foot .hint-btn{border-style:dashed;flex:1}
+
+.orow{display:grid;grid-template-columns:82px 1fr;gap:9px;align-items:start;padding:8px;border-radius:11px;
+  background:#fff;border:1px solid var(--line);margin-bottom:8px;transition:box-shadow .16s,border-color .16s,background .16s}
+.orow.drop{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(245,158,11,.2)}
+.ono{display:flex;flex-direction:column;gap:3px}
+.ono .val{font-family:"JetBrains Mono",monospace;font-size:14.5px;font-weight:500;padding:5px 7px;border-radius:8px;background:#f6f6f4;word-break:break-all}
+.ono input{font-family:"JetBrains Mono",monospace;font-size:14.5px;font-weight:500;padding:5px 7px;border-radius:8px;
+  border:1px solid var(--line);background:#fff;width:100%;outline:none}
+.ono input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.13)}
+.ono input.bad{border-color:var(--warn);box-shadow:0 0 0 3px rgba(176,99,103,.13)}
+.ono .err{font-size:10.5px;color:var(--warn);line-height:1.3}
+.members{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;align-content:flex-start;padding-top:2px}
+.ptag{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:4px 6px 4px 10px;font-size:13.5px;box-shadow:0 1px 3px rgba(0,0,0,.04);user-select:none;-webkit-user-select:none}
+.ptag .tx{cursor:grab}
+.editing .ptag{touch-action:none;cursor:grab}
+.ptag .tag-x{width:18px;height:18px;padding:0;border:none;background:#f0f0ed;border-radius:50%;font-size:12px;
+  line-height:1;color:var(--ink-3);display:none;align-items:center;justify-content:center}
+.editing .ptag .tag-x{display:none}.ptag .tag-x:hover{background:#f6dada;color:#9b3b40}
+.ptag.picked{opacity:.32}
+.ptag .tx{pointer-events:auto}
+.dghost{position:fixed;z-index:99;pointer-events:none;background:#fff;border:1px solid var(--accent);
+  border-radius:999px;padding:6px 12px;font-size:13.5px;box-shadow:0 8px 22px -6px rgba(0,0,0,.3);transform:translate(-50%,-50%) scale(1.06)}
+.poolbox{border:1px dashed var(--line);border-radius:11px;padding:8px;background:#fff;margin-bottom:8px}
+.poolbox .ttl{font-size:11.5px;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.trash{flex:1;height:44px;border:1.5px dashed #e6c9cb;border-radius:11px;background:#fdf7f7;color:#9b3b40;
+  display:none;align-items:center;justify-content:center;gap:7px;font-size:13.5px;font-weight:500;transition:.16s}
+.sheet.editing .trash{display:inline-flex}
+.sheet #addPersonBtn{display:none}
+.sheet.editing #addPersonBtn{display:inline-flex}
+.trash.hot{border-color:#b06367;background:#fbecec;transform:scale(1.03)}
+.pool-drop{border-color:var(--accent);background:var(--accent-soft)}
+
+/* 小弹窗 */
+.mini{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;
+  opacity:0;pointer-events:none;transition:opacity .18s}
+.mini.on{opacity:1;pointer-events:auto}
+.mini .box{background:#fff;border-radius:16px;padding:18px;width:100%;max-width:340px;box-shadow:0 18px 40px -12px rgba(0,0,0,.35);
+  transform:scale(.96);transition:transform .18s}
+.mini.on .box{transform:none}
+.mini h3{font-size:16px;margin-bottom:6px}
+.mini p{margin:0 0 13px;font-size:13.5px;color:var(--ink-2);line-height:1.6}
+.mini input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;outline:none;font-family:inherit}
+.mini input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.13)}
+.mini .row{display:flex;gap:9px;margin-top:14px}
+.mini .row button{flex:1}
+
+.paste-modal{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:85;display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.paste-modal.on{opacity:1;pointer-events:auto}
+.paste-box{width:100%;max-width:480px;background:#fff;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  transform:translateY(18px);transition:transform .22s cubic-bezier(.22,1,.36,1)}
+.paste-modal.on .paste-box{transform:none}
+.paste-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.paste-head h3{font-size:17px}
+.paste-head .sub{margin-left:auto;font-size:12px;color:var(--ink-3)}
+#pasteInput{min-height:44vh;max-height:62vh;resize:vertical;background:#fff}
+.paste-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+
+.preview{position:fixed;inset:0;background:rgba(24,24,27,.92);z-index:90;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.preview.on{opacity:1;pointer-events:auto}
+.preview .imgbox{flex:1;overflow:auto;padding:16px;display:flex;align-items:flex-start;justify-content:center}
+.preview img{max-width:100%;border-radius:10px;box-shadow:0 10px 30px -10px #000}
+.preview .bar{display:flex;gap:9px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff}
+
+.toast{position:fixed;left:50%;bottom:30px;transform:translate(-50%,14px);background:#18181b;color:#fff;font-size:13.5px;
+  padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .24s;z-index:120}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+footer{text-align:center;font-size:11.5px;color:var(--ink-3);padding-top:4px}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="top">
+    <h1>接龙分发小助手</h1>
+    <p class="sub">虚构演示数据 · 粘贴接龙即可生成两类清单</p>
+  </header>
+
+  <button class="list-btn" id="openListBtn">
+    <span>查看 / 编辑办公室人员清单</span>
+    <span style="display:flex;align-items:center;gap:8px">
+      <span class="cnt" id="listCnt"></span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </span>
+  </button>
+
+  <section class="card">
+    <div class="label-row">
+      <label class="label" for="listInput">接龙清单 <span>姓名，物品 / 姓名 物品</span></label>
+      <button id="openPasteBtn" class="ghost">粘贴接龙信息</button>
+    </div>
+    <textarea id="listInput" readonly spellcheck="false" placeholder="示例：&#10;1. 张三，苹果&#10;2. 李四 牛奶&#10;3. 王五 杂粮礼盒"></textarea>
+    <div class="act-row">
+      <button class="primary" id="byOfficeBtn">按办公室分配</button>
+      <button id="byItemBtn">统计需领取物品</button>
+    </div>
+    <p class="status" id="status"></p>
+  </section>
+
+  <section id="officeResult" class="card hidden">
+    <div class="sec-h">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg>
+      <h2>按办公室的物品领取清单</h2>
+      <span class="meta" id="odetailMeta"></span>
+    </div>
+    <div id="odetail"></div>
+    <div class="act-row" style="margin-top:14px">
+      <button class="primary block" id="genOfficeImgBtn">生成图片 / 分享</button>
+    </div>
+    <p class="hint">生成当前办公室分配清单图片，可直接分享或下载。</p>
+  </section>
+
+  <section id="itemResult" class="card hidden">
+    <div class="sec-h">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><circle cx="7" cy="7" r="1.2"/></svg>
+      <h2>需物品领取清单</h2>
+      <span class="meta" id="needMeta"></span>
+    </div>
+    <div class="needlist" id="needlist"></div>
+    <div class="act-row" style="grid-template-columns:1fr;margin-top:14px">
+      <button class="primary block" id="genNeedImgBtn">生成图片 / 分享</button>
+    </div>
+    <p class="hint">生成当前需领取物品清单图片，可直接分享或下载。</p>
+  </section>
+
+  <section class="card">
+    <div class="sec-h">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <h2>核对提示</h2>
+      <span class="meta" id="issueMeta"></span>
+    </div>
+    <div id="issues"></div>
+  </section>
+
+  <footer>演示数据均为虚构；配置仅在本机浏览器内保存</footer>
+</div>
+
+<!-- ══ 办公室人员清单弹窗 ══ -->
+<div class="backdrop" id="sheet">
+  <div class="sheet" id="sheetInner">
+    <div class="sheet-h">
+      <h2>办公室人员清单</h2>
+      <div class="sp">
+        <button id="editToggle" class="ghost">编辑</button>
+        <button id="resetBtn" class="ghost">恢复默认</button>
+        <button id="closeSheet" class="icon" aria-label="关闭">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="sheet-body" id="officeList"></div>
+    <div class="sheet-foot">
+      <div class="trash" id="trash">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        拖到这里删除
+      </div>
+      <button id="addPersonBtn" class="hint-btn">＋ 新增人员</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 小提示框 ══ -->
+<div class="mini" id="mini">
+  <div class="box">
+    <h3 id="miniTitle"></h3>
+    <p id="miniText"></p>
+    <input id="miniInput" type="text" placeholder="请输入姓名" style="display:none">
+    <div class="row">
+      <button id="miniCancel">取消</button>
+      <button class="primary" id="miniOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 粘贴接龙信息 ══ -->
+<div class="paste-modal" id="pasteModal">
+  <div class="paste-box">
+    <div class="paste-head">
+      <h3>粘贴接龙信息</h3>
+      <span class="sub">粘贴后点击确认</span>
+    </div>
+    <textarea id="pasteInput" spellcheck="false" placeholder="请在这里粘贴接龙信息"></textarea>
+    <div class="paste-actions">
+      <button id="pasteClose" class="ghost">关闭</button>
+      <button id="pasteConfirm" class="primary">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 图片预览 ══ -->
+<div class="preview" id="preview">
+  <div class="imgbox"><img id="previewImg" alt="清单图片"></div>
+  <div class="bar">
+    <button id="previewClose" class="ghost" style="flex:0 0 auto">关闭</button>
+    <button id="previewShare" style="flex:1">分享</button>
+    <button class="primary" id="previewDownload" style="flex:1">下载图片</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════ 数据 ══════════ */
+const DEFAULT_OFFICE_TEXT = `301：张三、李四
+302：王五、赵六
+305：钱七、孙八
+308：周九、吴十
+401：郑十一、冯十二
+406：陈十三、褚十四`;
+
+const DEFAULT_LIST = `#接龙
+示例物资领取（以下均为虚构数据）
+
+1. 张三，苹果
+2. 李四，牛奶
+3. 王五，苹果
+4. 赵六，杂粮礼盒
+5. 钱七，牛奶
+6. 孙八，苹果
+7. 周九，杂粮礼盒
+8. 吴十，牛奶
+9. 郑十一，苹果
+10. 冯十二，杂粮礼盒
+11. 陈十三，牛奶
+12. 褚十四，苹果`;
+
+const ITEM_COLORS = {
+  '苹果':'#b45309','牛奶':'#3b82f6','杂粮礼盒':'#2f6f5e'
+};
+const FALLBACK = ['#71717a','#0f766e','#a16207','#9f1239','#4338ca','#0369a1','#78716c'];
+const STORE_KEY = 'demo-allocator-anonymous-v1';
+
+/* ══════════ 工具 ══════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const baseItem = s => String(s||'').replace(/[（(][^）)]*[）)]?\s*$/,'').trim() || String(s||'').trim();
+const isBlank = s => !s || !s.replace(/\s/g,'').length;
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),1900); }
+
+/* ══════════ 办公室数据 ══════════ */
+let offices = [], pool = [];
+
+function parseDefault(text){
+  const out=[];
+  text.split(/\r?\n/).forEach(line=>{
+    const t=line.trim(); if(!t) return;
+    let i=t.indexOf('：'); if(i<0) i=t.indexOf(':');
+    if(i<0) return;
+    const no=t.slice(0,i).trim();
+    const members=t.slice(i+1).split(/[、,，\s]+/).map(s=>s.trim()).filter(Boolean);
+    out.push({no, members});
+  });
+  return out;
+}
+function loadStore(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(raw){
+      const d=JSON.parse(raw);
+      if(Array.isArray(d.offices)) { offices=d.offices.map(o=>({no:String(o.no||''),members:(o.members||[]).map(String)})); pool=(d.pool||[]).map(String); return; }
+    }
+  }catch(e){}
+  offices=parseDefault(DEFAULT_OFFICE_TEXT); pool=[];
+}
+function saveStore(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify({offices,pool})); }catch(e){}
+}
+function personIndex(){
+  const m=new Map();
+  offices.forEach((o,i)=>o.members.forEach(p=>{ if(!m.has(p)) m.set(p,{oi:i,pi:o.members.indexOf(p)}); }));
+  return m;
+}
+
+/* ══════════ 解析接龙 ══════════ */
+function parseList(text, peopleSet){
+  const rows=[], issues=[], seen=new Map();
+  const lines=text.split(/\r?\n/);
+  for(let i=0;i<lines.length;i++){
+    let body=lines[i].trim();
+    if(isBlank(body) || /^[#＃]/.test(body)) continue;
+    body=body.replace(/^\s*\d{1,3}\s*[.、．,，)）:：]?\s*/,'').trim();
+    if(isBlank(body)) continue;
+
+    let name='', item='', hadSep=false;
+    const m=body.match(/^([^\s，,、]+)[\s，,、]+(.+)$/);
+    if(m){ hadSep=true; name=m[1].trim(); item=m[2].trim(); } else { name=body; item=''; }
+
+    if(!peopleSet.has(name)){
+      let hit=null;
+      for(const p of peopleSet){ if(body.includes(p) && (!hit||p.length>hit.length)) hit=p; }
+      if(hit){
+        const k=body.indexOf(hit);
+        const pre=body.slice(0,k).replace(/[\s，,、]+$/,'').trim();
+        const post=body.slice(k+hit.length).replace(/^[\s，,、]+/,'').trim();
+        item=pre||post||item; name=hit;
+      } else if(!hadSep) continue;
+    }
+    name=name.replace(/^[\s，,、]+|[\s，,、]+$/g,'');
+    if(!name) continue;
+
+    if(!peopleSet.has(name)){
+      issues.push('未在办公室清单中找到「'+esc(name)+'」，请在人员清单中补充或修正。');
+      rows.push({name,item:item||'（物品未识别）',base:baseItem(item||'（物品未识别）'),unknown:true});
+      continue;
+    }
+    if(!item){ issues.push('「'+esc(name)+'」未识别到物品名称。'); item='（物品未识别）'; }
+    if(seen.has(name)) issues.push('「'+esc(name)+'」在清单中出现多次。'); else seen.set(name,i+1);
+    rows.push({name,item,base:baseItem(item),unknown:false});
+  }
+  return {rows,issues};
+}
+
+/* ══════════ 主计算 ══════════ */
+function compute(){
+  const people=new Map();
+  offices.forEach(o=>o.members.forEach(p=>{ if(!people.has(p)) people.set(p,true); }));
+  pool.forEach(p=>{ if(!people.has(p)) people.set(p,true); });
+  const peopleSet=new Set(people.keys());
+
+  const list=parseList($('#listInput').value, peopleSet);
+  const issues=[...list.issues];
+
+  const owner=new Map();
+  offices.forEach(o=>o.members.forEach(p=>{ if(!owner.has(p)) owner.set(p,o.no); }));
+
+  const assigned=[], unknownRows=[];
+  list.rows.forEach(r=>{
+    const no=owner.get(r.name);
+    if(no && !r.unknown) assigned.push({...r,no}); else unknownRows.push(r);
+  });
+
+  // 门牌重复
+  const noCount={};
+  offices.forEach(o=>{ noCount[o.no]=(noCount[o.no]||0)+1; });
+  const dupNo=Object.keys(noCount).filter(k=>noCount[k]>1);
+  if(dupNo.length) issues.push('门牌号重复：'+dupNo.map(esc).join('、')+'（相同门牌会归为同一间办公室）。');
+
+  // 门牌非法
+  const badNo=[...new Set(offices.filter(o=>o.no && !/^\d/.test(o.no)).map(o=>o.no))];
+  if(badNo.length) issues.push('门牌号需以数字开头：'+badNo.map(esc).join('、'));
+
+  // 门牌待补
+  const pendingNo=[...new Set(offices.filter(o=>/[?？]/.test(o.no)).map(o=>o.no))];
+  const pendingCnt=offices.filter(o=>/[?？]/.test(o.no)).reduce((s,o)=>s+o.members.length,0);
+  if(pendingNo.length) issues.push('门牌号待补全：'+pendingNo.map(esc).join('、')+'（共 '+pendingCnt+' 人）。');
+
+  // 清单里没有的人
+  const listed=new Set(list.rows.map(r=>r.name));
+  const missing=[]; owner.forEach((no,p)=>{ if(!listed.has(p)) missing.push(p+'（'+no+'）'); });
+  if(missing.length) issues.push('办公室清单中有 '+missing.length+' 人未出现在接龙清单：'+missing.map(esc).join('、'));
+
+  // 待分配区的人
+  const poolNot=pool.filter(p=>!listed.has(p));
+  if(poolNot.length) issues.push('待分配区有 '+poolNot.length+' 人未出现在接龙清单：'+poolNot.map(esc).join('、'));
+
+  // 按办公室归集（门牌号相同视为同一间）
+  const groups=new Map(), order=[];
+  offices.forEach(o=>{
+    if(!groups.has(o.no)){ groups.set(o.no,{no:o.no,items:[]}); order.push(o.no); }
+    const g=groups.get(o.no);
+    assigned.filter(r=>r.no===o.no).forEach(r=>{ if(!g.items.some(x=>x.name===r.name)) g.items.push(r); });
+  });
+  const byOffice=order.map((no,idx)=>({...groups.get(no),_order:idx})).filter(g=>g.items.length).sort((a,b)=>{
+    const aq=/[?？]/.test(a.no), bq=/[?？]/.test(b.no);
+    if(aq!==bq) return aq?1:-1;
+    if(aq&&bq) return a._order-b._order;
+    const an=parseInt(String(a.no).match(/^\d+/)?.[0]||'-1',10);
+    const bn=parseInt(String(b.no).match(/^\d+/)?.[0]||'-1',10);
+    if(an!==bn) return an-bn;
+    return String(a.no).localeCompare(String(b.no),'zh',{numeric:true});
+  });
+
+  // 按物品汇总
+  const byItemMap=new Map();
+  assigned.forEach(r=>{ if(!byItemMap.has(r.base)) byItemMap.set(r.base,[]); byItemMap.get(r.base).push(r); });
+  const byItem=[...byItemMap.entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],'zh'));
+
+  return {byOffice,byItem,assigned,unknownRows,issues,total:list.rows.length,owner,byItemMap,pendingNo};
+}
+
+/* ══════════ 颜色 ══════════ */
+let colorMap=new Map();
+function buildColors(byItem){
+  const m=new Map(); let i=0;
+  byItem.forEach(([k])=>{ if(ITEM_COLORS[k]) m.set(k,ITEM_COLORS[k]); else { m.set(k,FALLBACK[i%FALLBACK.length]); i++; } });
+  colorMap=m; return m;
+}
+const COL=k=>colorMap.get(k)||'#71717a';
+
+/* ══════════ 渲染：主页面 ══════════ */
+let currentView='none';
+
+function renderStatus(R){
+  const staff=offices.reduce((s,o)=>s+o.members.length,0);
+  $('#listCnt').textContent=staff+' 人';
+  $('#status').innerHTML='<span>已识别 <b>'+R.total+'</b> 人</span><span>办公室 <b>'+R.byOffice.length+'</b> 间</span>'+
+    '<span>物品 <b>'+R.byItem.length+'</b> 类</span>';
+}
+
+function renderOfficeResult(R){
+  $('#odetailMeta').textContent=R.assigned.length+' 人';
+  $('#odetail').innerHTML=R.byOffice.map(g=>{
+    const head=g.no + (/[?？]/.test(g.no)?' <span class="warn">门牌待补</span>':'');
+    const rows=g.items.map((r,i)=>
+      '<tr><td class="nm"><i>'+(i+1)+'.</i>'+esc(r.name)+'</td>'+
+      '<td class="item"><i style="background:'+COL(r.base)+'"></i>'+esc(r.item)+'</td></tr>').join('');
+    return '<div class="ocard"><div class="oh"><span class="no">'+esc(g.no)+'</span>'+
+      (/[?？]/.test(g.no)?'<span class="warn">门牌待补</span>':'')+
+      '<span class="ct">'+g.items.length+' 人</span></div>'+
+      '<table><tbody>'+rows+'</tbody></table></div>';
+  }).join('') || '<p class="hint" style="margin:0">没有匹配到人员，请检查清单内容。</p>';
+}
+
+function renderItemResult(R){
+  const total=R.byItem.reduce((s,[,v])=>s+v.length,0);
+  $('#needMeta').textContent=total+' 件';
+  $('#needlist').innerHTML=R.byItem.map(([k,v])=>{
+    const vars={}; v.forEach(r=>{ if(r.item!==r.base) vars[r.item]=(vars[r.item]||0)+1; });
+    const spec=Object.keys(vars).length?'<span class="spec">'+Object.entries(vars).map(([a,n])=>esc(a)+'×'+n).join('、')+'</span>':'';
+    return '<div class="needrow"><span class="dot" style="background:'+COL(k)+'"></span>'+
+      '<span class="nm">'+esc(k)+'</span>'+spec+
+      '<span class="qty">'+v.length+'<em>件</em></span></div>';
+  }).join('') || '<p class="hint" style="margin:0">没有匹配到物品。</p>';
+}
+
+function renderIssues(R){
+  $('#issueMeta').textContent=R.issues.length?R.issues.length+' 条':'全部通过';
+  const w='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+  const o='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  $('#issues').innerHTML=R.issues.length
+    ? R.issues.map(t=>'<div class="issue">'+w+'<div>'+t+'</div></div>').join('')
+    : '<div class="issue ok">'+o+'<div>全部人员已成功归入办公室，物品与清单一致，无异常。</div></div>';
+}
+
+function refresh(){
+  const R=compute();
+  buildColors(R.byItem);
+  renderStatus(R);
+  renderIssues(R);
+  if(currentView==='office') renderOfficeResult(R);
+  if(currentView==='item') renderItemResult(R);
+  return R;
+}
+
+function showView(v){
+  currentView=v;
+  const R=refresh();
+  $('#officeResult').classList.toggle('hidden', v!=='office');
+  $('#itemResult').classList.toggle('hidden', v!=='item');
+  $('#byOfficeBtn').classList.toggle('primary', v==='office');
+  $('#byItemBtn').classList.toggle('primary', v==='item');
+  if(v==='office') renderOfficeResult(R);
+  if(v==='item') renderItemResult(R);
+}
+
+/* ══════════ 弹窗：办公室人员清单 ══════════ */
+let editMode=false;
+
+function renderSheet(){
+  const body=$('#officeList');
+  const staff=offices.reduce((s,o)=>s+o.members.length,0);
+  let html=offices.map((o,oi)=>{
+    const noCell = editMode
+      ? '<input class="ono-in" data-oi="'+oi+'" value="'+esc(o.no)+'" inputmode="numeric" autocomplete="off">' +
+        '<span class="err" id="err-'+oi+'" style="display:none">需以数字开头</span>'
+      : '<span class="val">'+esc(o.no||'—')+'</span>';
+    const tags=o.members.map((p,pi)=>
+      '<span class="ptag" data-person="'+esc(p)+'" data-oi="'+oi+'" data-pi="'+pi+'"><span class="tx">'+esc(p)+'</span></span>').join('');
+    return '<div class="orow" data-drop="office" data-oi="'+oi+'"><div class="ono">'+noCell+'</div>'+
+      '<div class="members">'+ (tags||'<span style="font-size:12px;color:#b0b0b8">（空）</span>')+'</div></div>';
+  }).join('');
+
+  html+='<div class="poolbox" data-drop="pool"><div class="ttl">待分配（拖到任意办公室，或从办公室拖回这里）</div>'+
+    '<div class="members">'+(pool.length?pool.map(p=>'<span class="ptag" data-person="'+esc(p)+'" data-oi="-1"><span class="tx">'+esc(p)+'</span></span>').join('')
+      :'<span style="font-size:12px;color:#b0b0b8">（空，点下方「＋ 新增人员」）</span>')+'</div></div>';
+
+  body.innerHTML=html;
+  $('#sheetInner').classList.toggle('editing',editMode);
+  $('#editToggle').textContent=editMode?'完成':'编辑';
+  $('#editToggle').classList.toggle('on',editMode);
+
+  body.querySelectorAll('.ono-in').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const oi=+inp.dataset.oi, val=inp.value.trim();
+      const bad=val.length>0 && !/^\d/.test(val);
+      inp.classList.toggle('bad',bad);
+      const err=document.getElementById('err-'+oi); if(err) err.style.display=bad?'block':'none';
+    });
+    inp.addEventListener('change',()=>{ offices[+inp.dataset.oi].no=inp.value.trim(); saveStore(); refresh(); });
+  });
+  body.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const [oi,pi]=b.dataset.del.split('-').map(Number);
+      const name=offices[oi].members[pi];
+      confirmMini('删除人员','确认从「'+(offices[oi].no||'未编号')+'」移除 '+name+' 吗？','删除',()=>{
+        offices[oi].members.splice(pi,1); saveStore(); renderSheet(); refresh();
+      });
+    });
+  });
+  body.querySelectorAll('[data-delp]').forEach(b=>{
+    b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const name=b.dataset.delp;
+      confirmMini('删除人员','确认删除 '+name+' 吗？','删除',()=>{
+        pool=pool.filter(x=>x!==name); saveStore(); renderSheet(); refresh();
+      });
+    });
+  });
+}
+
+function openSheet(){ $('#sheet').classList.add('on'); document.body.style.overflow='hidden'; renderSheet(); }
+function closeSheet(){ $('#sheet').classList.remove('on'); document.body.style.overflow=''; }
+
+/* ══════════ 小弹窗 ══════════ */
+let miniCb=null;
+function openMini(title,text,input,cb){
+  $('#miniTitle').textContent=title; $('#miniText').innerHTML=text||'';
+  const inp=$('#miniInput'); inp.style.display=input?'block':'none'; inp.value='';
+  $('#miniOk').textContent=input?'添加':'删除';
+  $('#miniOk').className=input?'primary':'danger';
+  miniCb=cb; $('#mini').classList.add('on');
+  if(input) setTimeout(()=>inp.focus(),120);
+}
+function confirmMini(title,text,okLabel,cb){ openMini(title,text,false,cb); }
+$('#miniCancel').addEventListener('click',()=>{ $('#mini').classList.remove('on'); miniCb=null; });
+$('#miniOk').addEventListener('click',()=>{
+  const v=$('#miniInput').value.trim();
+  if($('#miniInput').style.display!=='none' && !v){ toast('请输入姓名'); return; }
+  const cb=miniCb; $('#mini').classList.remove('on'); miniCb=null;
+  if(cb) cb(v);
+});
+
+/* ══════════ 拖拽 ══════════ */
+let drag=null;
+const sheetBody=()=>$('#officeList');
+
+function hitTarget(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el) return null;
+  const trash=$('#trash');
+  if(trash && trash.offsetParent!==null && (el===trash||trash.contains(el))) return {type:'trash'};
+  const t=el.closest('[data-drop]');
+  if(!t) return null;
+  return {type:t.dataset.drop, oi:t.dataset.oi!==undefined?+t.dataset.oi:null};
+}
+function clearHi(){
+  sheetBody().querySelectorAll('.drop').forEach(e=>e.classList.remove('drop'));
+  $('#trash').classList.remove('hot');
+}
+function setHi(t){
+  clearHi();
+  if(!t) return;
+  if(t.type==='trash'){ $('#trash').classList.add('hot'); return; }
+  if(t.type==='office'){ const r=sheetBody().querySelector('.orow[data-oi="'+t.oi+'"]'); if(r) r.classList.add('drop'); }
+  if(t.type==='pool'){ const p=sheetBody().querySelector('.poolbox'); if(p) p.classList.add('pool-drop'); }
+}
+function activateDrag(e){
+  if(!drag || drag.active) return;
+  drag.active=true;
+  drag.tag.classList.add('picked');
+  const g=document.createElement('div');
+  g.className='dghost'; g.textContent=drag.person;
+  document.body.appendChild(g); drag.ghost=g;
+  g.style.left=e.clientX+'px'; g.style.top=e.clientY+'px';
+  if(navigator.vibrate && e.pointerType==='touch') navigator.vibrate(12);
+}
+function onDown(e){
+  if(!editMode) return;
+  const tag=e.target.closest('.ptag'); if(!tag) return;
+  const person=tag.dataset.person;
+  const oi=tag.dataset.oi!==undefined?+tag.dataset.oi:-1;
+  drag={tag,person,oi,startX:e.clientX,startY:e.clientY,active:false,pid:e.pointerId};
+  try{ tag.setPointerCapture(e.pointerId); }catch(_){}
+  // 鼠标/触控笔直接进入拖拽；触屏在首次明显移动时进入拖拽，避免误触。
+  if(e.pointerType!=='touch') activateDrag(e);
+}
+function onMove(e){
+  if(!drag) return;
+  if(!drag.active){
+    const dx=Math.abs(e.clientX-drag.startX), dy=Math.abs(e.clientY-drag.startY);
+    if(dx>5 || dy>5) activateDrag(e);
+    else return;
+  }
+  e.preventDefault();
+  if(drag.ghost){ drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px'; }
+  setHi(hitTarget(e.clientX,e.clientY));
+}
+function onUp(e){
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(!d.active) return;
+  d.tag.classList.remove('picked');
+  if(d.ghost) d.ghost.remove();
+  const t=hitTarget(e.clientX,e.clientY);
+  clearHi();
+  if(!t) return;
+
+  // 先从原位置摘除
+  if(d.oi>=0 && offices[d.oi] && offices[d.oi].members.includes(d.person)) offices[d.oi].members=offices[d.oi].members.filter(x=>x!==d.person);
+  else pool=pool.filter(x=>x!==d.person);
+
+  if(t.type==='trash'){
+    confirmMini('删除人员','确认删除 '+d.person+' 吗？','删除',()=>{ saveStore(); renderSheet(); refresh(); });
+    return;
+  }
+  if(t.type==='office'){
+    if(!offices[t.oi].members.includes(d.person)) offices[t.oi].members.push(d.person);
+  }
+  if(t.type==='pool'){ if(!pool.includes(d.person)) pool.push(d.person); }
+  saveStore(); renderSheet(); refresh();
+}
+function bindDrag(){
+  const b=sheetBody();
+  b.addEventListener('pointerdown',onDown);
+  window.addEventListener('pointermove',onMove,{passive:false});
+  window.addEventListener('pointerup',onUp);
+  window.addEventListener('pointercancel',()=>{ if(drag){ if(drag.ghost) drag.ghost.remove(); if(drag.tag) drag.tag.classList.remove('picked'); clearHi(); drag=null; } });
+}
+
+/* ══════════ 图片生成 ══════════ */
+function roundRect(c,x,y,w,h,r){
+  c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+function drawOfficeImage(R){
+  const S=2, W=760, PAD=40;
+  const groups=R.byOffice;
+  const rowH=40, headH=46, gapH=22;
+  const H = PAD + 86 + 30 + groups.reduce((s,g)=>s+headH+g.items.length*rowH+gapH,0) + 74;
+  const cv=document.createElement('canvas');
+  cv.width=W*S; cv.height=H*S;
+  const c=cv.getContext('2d');
+  c.scale(S,S);
+  c.fillStyle='#ffffff'; c.fillRect(0,0,W,H);
+
+  c.fillStyle='#18181b'; c.font='600 30px "Noto Sans SC","Outfit",sans-serif';
+  c.fillText('接龙分发小助手 · 办公室物品领取清单',PAD,PAD+30);
+  c.fillStyle='#8e8e97'; c.font='400 16px "Noto Sans SC","Outfit",sans-serif';
+  c.fillText('共 '+R.assigned.length+' 人 · '+groups.length+' 间办公室 · '+new Date().toLocaleDateString('zh-CN'),PAD,PAD+60);
+
+  let y=PAD+86+30;
+  groups.forEach(g=>{
+    c.fillStyle='#f7f7f4'; roundRect(c,PAD,y-26,W-2*PAD,headH-6,10); c.fill();
+    c.fillStyle='#18181b'; c.font='600 21px "JetBrains Mono",monospace';
+    c.fillText(g.no||'未编号',PAD+16,y+4);
+    c.fillStyle='#8e8e97'; c.font='400 15px "Noto Sans SC",sans-serif';
+    c.textAlign='right'; c.fillText(g.items.length+' 人',W-PAD-16,y+4); c.textAlign='left';
+    y+=headH-6+8;
+    g.items.forEach((r,i)=>{
+      if(i%2===1){ c.fillStyle='#fbfbf9'; c.fillRect(PAD,y-26,W-2*PAD,rowH); }
+      c.fillStyle='#8e8e97'; c.font='400 14px "JetBrains Mono",monospace';
+      c.fillText(String(i+1),PAD+16,y+4);
+      c.fillStyle='#18181b'; c.font='500 19px "Noto Sans SC",sans-serif';
+      c.fillText(r.name,PAD+48,y+5);
+      c.fillStyle='#55555e'; c.font='400 18px "Noto Sans SC",sans-serif';
+      const iw=c.measureText(r.item).width;
+      c.fillStyle=COL(r.base);
+      roundRect(c,W-PAD-24-iw-20,y-9,11,11,3); c.fill();
+      c.fillStyle='#55555e';
+      c.textAlign='right'; c.fillText(r.item,W-PAD-16,y+5); c.textAlign='left';
+      y+=rowH;
+    });
+    y+=gapH-8;
+  });
+  c.fillStyle='#8e8e97'; c.font='400 15px "Noto Sans SC",sans-serif';
+  c.fillText('合计 '+R.byItem.map(([k,v])=>k+'×'+v.length).join('　'),PAD,y+16);
+  return cv;
+}
+function drawNeedImage(R){
+  const S=2, W=760, PAD=40, rowH=54;
+  const H=PAD+96+R.byItem.length*rowH+110;
+  const cv=document.createElement('canvas');
+  cv.width=W*S; cv.height=H*S;
+  const c=cv.getContext('2d'); c.scale(S,S);
+  c.fillStyle='#fff'; c.fillRect(0,0,W,H);
+  c.fillStyle='#18181b'; c.font='600 30px "Noto Sans SC","Outfit",sans-serif';
+  c.fillText('接龙分发小助手 · 需物品领取清单',PAD,PAD+30);
+  c.fillStyle='#8e8e97'; c.font='400 16px "Noto Sans SC",sans-serif';
+  const total=R.byItem.reduce((s,[,v])=>s+v.length,0);
+  c.fillText('共 '+R.byItem.length+' 类 · '+total+' 件 · '+new Date().toLocaleDateString('zh-CN'),PAD,PAD+60);
+  let y=PAD+96;
+  R.byItem.forEach(([k,v])=>{
+    c.fillStyle=COL(k); roundRect(c,PAD,y-26,14,14,4); c.fill();
+    c.fillStyle='#18181b'; c.font='500 22px "Noto Sans SC",sans-serif';
+    const kw=c.measureText(k).width;
+    c.fillText(k,PAD+32,y+4);
+    const vars={}; v.forEach(r=>{ if(r.item!==r.base) vars[r.item]=(vars[r.item]||0)+1; });
+    if(Object.keys(vars).length){
+      c.fillStyle='#8e8e97'; c.font='400 14px "Noto Sans SC",sans-serif';
+      c.fillText(Object.entries(vars).map(([a,n])=>a+'×'+n).join('、'),PAD+40+kw,y+4);
+    }
+    c.fillStyle='#18181b'; c.font='600 26px "JetBrains Mono",monospace';
+    c.textAlign='right'; c.fillText('×'+v.length,W-PAD,y+6); c.textAlign='left';
+    c.strokeStyle='#eeeeea'; c.beginPath(); c.moveTo(PAD,y+16); c.lineTo(W-PAD,y+16); c.stroke();
+    y+=rowH;
+  });
+  return cv;
+}
+function ctxWidth(c,txt,size){ c.font='500 '+size+'px "Noto Sans SC",sans-serif'; return c.measureText(txt).width; }
+
+let previewBlob=null, previewName='清单.png';
+function showPreview(canvas,name){
+  canvas.toBlob(blob=>{
+    previewBlob=blob; previewName=name;
+    const url=URL.createObjectURL(blob);
+    const img=$('#previewImg'); if(img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+    img.src=url; img.dataset.url=url;
+    $('#preview').classList.add('on');
+  },'image/png');
+}
+$('#previewClose').addEventListener('click',()=>{ $('#preview').classList.remove('on'); });
+$('#previewDownload').addEventListener('click',()=>{
+  if(!previewBlob) return;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(previewBlob); a.download=previewName;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('已保存到下载目录');
+});
+$('#previewShare').addEventListener('click',async()=>{
+  if(!previewBlob) return;
+  const file=new File([previewBlob],previewName,{type:'image/png'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:previewName}); }catch(e){}
+  } else { $('#previewDownload').click(); }
+});
+
+/* ══════════ 事件绑定 ══════════ */
+$('#openListBtn').addEventListener('click',openSheet);
+$('#closeSheet').addEventListener('click',closeSheet);
+$('#sheet').addEventListener('click',e=>{ if(e.target===$('#sheet')) closeSheet(); });
+$('#editToggle').addEventListener('click',()=>{ editMode=!editMode; renderSheet(); });
+$('#resetBtn').addEventListener('click',()=>{
+  confirmMini('恢复默认','将丢弃当前所有门牌与人员的修改，恢复内置清单。','恢复',()=>{
+    offices=parseDefault(DEFAULT_OFFICE_TEXT); pool=[]; saveStore(); renderSheet(); refresh(); toast('已恢复默认');
+  });
+});
+$('#addPersonBtn').addEventListener('click',()=>{
+  openMini('新增人员','输入姓名后确认，将作为一个可拖拽标签出现在「待分配」区。',true,(name)=>{
+    if(offices.some(o=>o.members.includes(name))||pool.includes(name)){ toast('该姓名已存在'); return; }
+    pool.push(name); saveStore(); renderSheet(); refresh(); toast('已添加 '+name+'，拖到办公室即可');
+  });
+});
+$('#byOfficeBtn').addEventListener('click',()=>{ showView('office'); });
+$('#byItemBtn').addEventListener('click',()=>{ showView('item'); });
+$('#genOfficeImgBtn').addEventListener('click',async()=>{
+  const R=refresh();
+  if(!R.byOffice.length){ toast('暂无可生成的内容'); return; }
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  showPreview(drawOfficeImage(R),'办公室物品领取清单.png');
+});
+$('#genNeedImgBtn').addEventListener('click',async()=>{
+  const R=refresh();
+  if(!R.byItem.length){ toast('暂无可生成的内容'); return; }
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  showPreview(drawNeedImage(R),'需物品领取清单.png');
+});
+function openPasteModal(){
+  $('#pasteInput').value='';
+  $('#pasteModal').classList.add('on');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>$('#pasteInput').focus(),100);
+}
+function closePasteModal(){
+  $('#pasteModal').classList.remove('on');
+  document.body.style.overflow='';
+}
+$('#openPasteBtn').addEventListener('click',openPasteModal);
+$('#pasteClose').addEventListener('click',closePasteModal);
+$('#pasteModal').addEventListener('click',e=>{ if(e.target===$('#pasteModal')) closePasteModal(); });
+$('#pasteConfirm').addEventListener('click',()=>{
+  const txt=$('#pasteInput').value.trim();
+  if(!txt){ toast('请先粘贴接龙信息'); return; }
+  $('#listInput').value=txt;
+  closePasteModal();
+  refresh();
+  toast('接龙信息已更新');
+});
+
+/* ══════════ 初始化 ══════════ */
+loadStore();
+$('#listInput').value=DEFAULT_LIST;
+bindDrag();
+saveStore();
+refresh();
+</script>
+</body>
+</html>
