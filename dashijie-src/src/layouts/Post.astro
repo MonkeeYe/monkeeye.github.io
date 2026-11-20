@@ -1,0 +1,5 @@
+---
+import Base from './Base.astro';
+const { title, date, summary } = Astro.props;
+---
+<Base title={`${title}｜爱管闲事的大师姐`}><article class='article'><a href={import.meta.env.BASE_URL}>← 返回文章列表</a><h1>{title}</h1><p>{summary}</p><div class='meta'>{date.toLocaleDateString('zh-CN')}</div><slot/></article></Base>

@@ -1,0 +1,6 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const posts=(await getCollection('posts',({data})=>!data.draft)).sort((a,b)=>b.data.date.valueOf()-a.data.date.valueOf());
+---
+<Base><section class='hero'><div class='eyebrow'>DASHIJIE · VIBE CODING</div><h1>爱管闲事的大师姐</h1><p>记录生活里的小问题，以及我怎么用 AI 把它们解决掉。</p></section><section><div class='meta'>最新文章</div>{posts.map((post)=><a class='post-card' href={`${import.meta.env.BASE_URL}posts/${post.id.replace(/\/index$/, '')}/`}><div class='meta'>{post.data.date.toLocaleDateString('zh-CN')}</div><h2>{post.data.title}</h2><p>{post.data.summary}</p></a>)}</section></Base>
